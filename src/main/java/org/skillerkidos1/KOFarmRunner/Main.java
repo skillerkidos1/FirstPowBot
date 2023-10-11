@@ -7,7 +7,10 @@ import org.powbot.api.event.BreakEvent;
 import org.powbot.api.event.MessageEvent;
 import org.powbot.api.rt4.*;
 import org.powbot.api.rt4.walking.model.Skill;
-import org.powbot.api.script.*;
+import org.powbot.api.script.AbstractScript;
+import org.powbot.api.script.OptionType;
+import org.powbot.api.script.ScriptConfiguration;
+import org.powbot.api.script.ScriptManifest;
 import org.powbot.api.script.paint.Paint;
 import org.powbot.api.script.paint.PaintBuilder;
 import org.powbot.api.script.paint.TrackSkillOption;
@@ -18,7 +21,7 @@ import java.util.concurrent.Callable;
 import static org.powbot.api.Condition.sleep;
 import static org.powbot.dax.shared.helpers.General.random;
 
-@ScriptManifest(name = "KO Farm Runner", description = "Farming runs Herbs,Allotments,Flowers", version = "0.1")
+@ScriptManifest(name = "KO Farm Runner", description = "Farming runs Herbs,Allotments,Flowers", version = "0.2")
 @ScriptConfiguration.List({
         @ScriptConfiguration(
         name = "Allotment",
