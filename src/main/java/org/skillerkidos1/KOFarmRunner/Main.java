@@ -77,15 +77,72 @@ public class Main extends AbstractScript {
 
     private long scriptStartTime;
 
+    public String currently;
 
+    //NPCs
+    private final static String leprechaun = "Tool Leprechaun";
+
+    //Seed names
     public String allotmentSeedSelected;
     public String flowerSeedSelected;
     public String herbSeedSelected;
 
+    //Teleports
     public String faladorTeleportSelected;
     public String catherbyTeleportSelected;
     public String ardougneTeleportSelected;
 
+    //Compost used
+    private boolean compost1 = false;
+    private boolean compost2 = false;
+    private boolean compost3 = false;
+    private boolean compost4 = false;
+
+    //Tiles
+    private final static Tile ARDOUGNE_TELEPORT_AREA = new Tile(2662, 3307, 0);
+    private final static Tile ARDOUGNE_FARM_PATCH = new Tile(2665, 3376, 0);
+
+    private final static Tile CATHERBY_TELEPORT_AREA = new Tile(2757, 3478, 0);
+    private final static Tile CATHERBY_FARM_PATCH = new Tile(2807, 3464, 0);
+
+    private final static Tile FALADOR_FARM_PATCH = new Tile(3056, 3310, 0);
+    private final static Tile FALADOR_TELEPORT_AREA = new Tile(2965, 3381, 0);
+
+    private final Tile f_allotment1_tile = new Tile(3050, 3312, 0);//within 5
+    private final Tile f_allotment2_tile = new Tile(3059, 3303, 0);//within 5
+    private final Tile f_flower_tile = new Tile(3054, 3307, 0);//within 5
+    private final Tile f_herb_tile = new Tile(3059, 3312, 0);//within 5
+    private final int f_herbPatchEmptyID = 8132;
+
+    private final Tile a_allotment1_tile = new Tile(2666, 3381, 0);//within 5
+    private final Tile a_allotment2_tile = new Tile(2666, 3368, 0);//within 5
+    private final Tile a_flower_tile = new Tile(2667, 3375, 0);//within 5
+    private final Tile a_herb_tile = new Tile(2671, 3375, 0);//within 5
+    private final int a_herbPatchEmptyID = 8132;
+
+    private final Tile c_allotment1_tile = new Tile(2809, 3469, 0);//within 5
+    private final Tile c_allotment2_tile = new Tile(2809, 3458, 0);//within 5
+    private final Tile c_flower_tile = new Tile(2809, 3464, 0);//within 5
+    private final Tile c_herb_tile = new Tile(2814, 3463, 0);//within 5
+    private final int c_herbPatchEmptyID = 8135;
+
+    private static final int allotmentItemID = 1982;
+    private static final int allotmentNotedID = 1983;
+    private static final int herbItemID = 199;
+    private static final int flowerItemID = 225;
+
+    //Patches completed
+    private boolean faladorCompleted = false;
+    private boolean catherbyCompleted = false;
+    private boolean ardougneCompleted = false;
+
+    //Patch number
+    private int patchNumber;
+
+    //GUI setup
+    private boolean setup = false;
+
+    //onStart
     @Override
     public void onStart() {
         scriptStartTime = System.currentTimeMillis();
@@ -98,8 +155,7 @@ public class Main extends AbstractScript {
         addPaint(getPaintBuilder());
     }
 
-    public String currently;
-
+    //Builds paint
     private Paint getPaintBuilder() {
         return PaintBuilder.newBuilder()
                 .x(10)
@@ -114,38 +170,12 @@ public class Main extends AbstractScript {
                 .build();
     }
 
+    //Sets currently for paint
     private String getCurrently() {
         return currently;
     }
 
-    @Subscribe
-    public void onMessage(MessageEvent event) {
-        if (event.getMessage().contains("You treat the") ||
-                event.getMessage().contains("has already been treated")) {
-            if (patchNumber == 1) {
-                getLog().info("Compost 1 done");
-                compost1 = true;
-            } else if (patchNumber == 2) {
-                getLog().info("Compost 2 done");
-                compost2 = true;
-            } else if (patchNumber == 3) {
-                getLog().info("Compost 3 done");
-                compost3 = true;
-            } else if (patchNumber == 4) {
-                getLog().info("Compost 4 done");
-                compost4 = true;
-            }
-        }
-    }
-
-
-    private boolean compost1 = false;
-    private boolean compost2 = false;
-    private boolean compost3 = false;
-    private boolean compost4 = false;
-
-    private boolean setup = false;
-
+    //loop
     @Override
     public void poll() {
         if (allotmentSeedSelected == null || flowerSeedSelected == null || herbSeedSelected == null ||
@@ -193,14 +223,47 @@ public class Main extends AbstractScript {
         }
     }
 
+    //Break event
+    @Subscribe
+    public void onBreakEvent(BreakEvent evt) {
+        if (!allPatchesCompleted()) {
+            evt.delay(30000);
+        } else {
+            getLog().info("Accepted break");
+            evt.accept();
+        }
+    }
+
+    //Message event
+    @Subscribe
+    public void onMessage(MessageEvent event) {
+        if (event.getMessage().contains("You treat the") ||
+                event.getMessage().contains("has already been treated")) {
+            if (patchNumber == 1) {
+                getLog().info("Compost 1 done");
+                compost1 = true;
+            } else if (patchNumber == 2) {
+                getLog().info("Compost 2 done");
+                compost2 = true;
+            } else if (patchNumber == 3) {
+                getLog().info("Compost 3 done");
+                compost3 = true;
+            } else if (patchNumber == 4) {
+                getLog().info("Compost 4 done");
+                compost4 = true;
+            }
+        }
+    }
+
+    //At any teleport area
     private boolean atTeleportArea() {
         return atFaladorTeleport() || atArdougneTeleportArea() || atCamelotTeleportArea();
     }
 
+    //all patches completed
     private boolean allPatchesCompleted() {
         return faladorCompleted && catherbyCompleted && ardougneCompleted;
     }
-
 
     private void resetCompost() {
         compost1 = false;
@@ -209,43 +272,35 @@ public class Main extends AbstractScript {
         compost4 = false;
     }
 
-    private final Tile f_allotment1_tile = new Tile(3050, 3312, 0);//within 5
-    private final Tile f_allotment2_tile = new Tile(3059, 3303, 0);//within 5
-    private final Tile f_flower_tile = new Tile(3054, 3307, 0);//within 5
-    private final Tile f_herb_tile = new Tile(3059, 3312, 0);//within 5
-    private final int f_herbPatchEmptyID = 8132;
-
-    private final Tile a_allotment1_tile = new Tile(2666, 3381, 0);//within 5
-    private final Tile a_allotment2_tile = new Tile(2666, 3368, 0);//within 5
-    private final Tile a_flower_tile = new Tile(2667, 3375, 0);//within 5
-    private final Tile a_herb_tile = new Tile(2671, 3375, 0);//within 5
-    private final int a_herbPatchEmptyID = 8132;
-
-    private final Tile c_allotment1_tile = new Tile(2809, 3469, 0);//within 5
-    private final Tile c_allotment2_tile = new Tile(2809, 3458, 0);//within 5
-    private final Tile c_flower_tile = new Tile(2809, 3464, 0);//within 5
-    private final Tile c_herb_tile = new Tile(2814, 3463, 0);//within 5
-    private final int c_herbPatchEmptyID = 8135;
-
-    private static final int allotmentItemID = 1982;
-    private static final int allotmentNotedID = 1983;
-    private static final int herbItemID = 199;
-    private static final int flowerItemID = 225;
-
-    private boolean faladorCompleted = false;
-    private boolean catherbyCompleted = false;
-    private boolean ardougneCompleted = false;
-
-
-    private int patchNumber;
-
-    @Subscribe
-    public void onBreakEvent(BreakEvent evt) {
-        if (!allPatchesCompleted()) {
-            evt.delay(30000);
+    private boolean getCompost(int num) {
+        if (num == 1) {
+            return compost1;
+        } else if (num == 2) {
+            return compost2;
+        } else if (num == 3) {
+            return compost3;
+        } else if (num == 4) {
+            return compost4;
         } else {
-            getLog().info("Accepted break");
-            evt.accept();
+            return false;
+        }
+    }
+
+
+    private void getFaladorFarmHandler() {
+        getLog().info("Falador farm handler");
+        if (!isPatchPlanted(allotmentSeedSelected, f_allotment1_tile).valid()) {
+            testFarmHandler(allotmentSeedSelected, "Allotment", f_allotment1_tile, getCompost(1), 1);
+        } else if (!isPatchPlanted(allotmentSeedSelected, f_allotment2_tile).valid()) {
+            testFarmHandler(allotmentSeedSelected, "Allotment", f_allotment2_tile, getCompost(2), 2);
+        } else if (!isPatchPlanted(flowerSeedSelected, f_flower_tile).valid()) {
+            testFarmHandler(flowerSeedSelected, "Flower", f_flower_tile, getCompost(3), 3);
+        } else if (!isPatchPlanted("Herb", f_herb_tile).valid()) {
+            testFarmHandler(herbSeedSelected, "Herb", f_herb_tile, getCompost(4), 4);
+        } else {
+            getLog().info("Nothing to do");
+            faladorCompleted = true;
+            getTeleportHandler("Camelot", catherbyTeleportSelected, CATHERBY_FARM_PATCH);
         }
     }
 
@@ -265,33 +320,15 @@ public class Main extends AbstractScript {
         }
     }
 
-    private boolean getCompost(int num) {
-        if (num == 1) {
-            return compost1;
-        } else if (num == 2) {
-            return compost2;
-        } else if (num == 3) {
-            return compost3;
-        } else if (num == 4) {
-            return compost4;
-        } else {
-            return false;
-        }
-    }
-
     private void getCatherbyFarmHandler() {
         getLog().info("Catherby farm handler");
         if (!isPatchPlanted(allotmentSeedSelected, c_allotment1_tile).valid()) {
-            getLog().info("1");
             testFarmHandler(allotmentSeedSelected, "Allotment", c_allotment1_tile, getCompost(1), 1);
         } else if (!isPatchPlanted(allotmentSeedSelected, c_allotment2_tile).valid()) {
-            getLog().info("2");
             testFarmHandler(allotmentSeedSelected, "Allotment", c_allotment2_tile, getCompost(2), 2);
         } else if (!isPatchPlanted(flowerSeedSelected, c_flower_tile).valid()) {
-            getLog().info("3");
             testFarmHandler(flowerSeedSelected, "Flower", c_flower_tile, getCompost(3), 3);
         } else if (!isPatchPlanted("Herb", c_herb_tile).valid()) {
-            getLog().info("4");
             testFarmHandler(herbSeedSelected, "Herb", c_herb_tile, getCompost(4), 4);
         } else {
             getLog().info("Nothing to do");
@@ -359,27 +396,6 @@ public class Main extends AbstractScript {
                     .nearest().first();
         }
         return patch;
-    }
-
-    private void getFaladorFarmHandler() {
-        getLog().info("Falador farm handler");
-        if (!isPatchPlanted(allotmentSeedSelected, f_allotment1_tile).valid()) {
-            getLog().info("1");
-            testFarmHandler(allotmentSeedSelected, "Allotment", f_allotment1_tile, getCompost(1), 1);
-        } else if (!isPatchPlanted(allotmentSeedSelected, f_allotment2_tile).valid()) {
-            getLog().info("2");
-            testFarmHandler(allotmentSeedSelected, "Allotment", f_allotment2_tile, getCompost(2), 2);
-        } else if (!isPatchPlanted(flowerSeedSelected, f_flower_tile).valid()) {
-            getLog().info("3");
-            testFarmHandler(flowerSeedSelected, "Flower", f_flower_tile, getCompost(3), 3);
-        } else if (!isPatchPlanted("Herb", f_herb_tile).valid()) {
-            getLog().info("4");
-            testFarmHandler(herbSeedSelected, "Herb", f_herb_tile, getCompost(4), 4);
-        } else {
-            getLog().info("Nothing to do");
-            faladorCompleted = true;
-            getTeleportHandler("Camelot", catherbyTeleportSelected, CATHERBY_FARM_PATCH);
-        }
     }
 
     private void getCompostHandler(GameObject patchName, boolean compostNumber) {
@@ -589,9 +605,6 @@ public class Main extends AbstractScript {
         }
     }
 
-
-    private final static String leprechaun = "Tool Leprechaun";
-
     private void useItemOnLeprechaun() {
         getLog().info("Use item on Leprechaun");
         Npc lep = Npcs.stream().name(leprechaun).nearest().first();
@@ -666,13 +679,9 @@ public class Main extends AbstractScript {
         }
     }
 
-    private final static Tile ARDOUGNE_TELEPORT_AREA = new Tile(2662, 3307, 0);
-
     private boolean atArdougneTeleportArea() {
         return ARDOUGNE_TELEPORT_AREA.distanceTo(Players.local().tile()) <= 20;
     }
-
-    private final static Tile ARDOUGNE_FARM_PATCH = new Tile(2665, 3376, 0);
 
     private void getWalkingToArdougneFarmingPatch() {
         getLog().info("Walk to ardougne patch");
@@ -683,13 +692,9 @@ public class Main extends AbstractScript {
         return ARDOUGNE_FARM_PATCH.distanceTo(Players.local().tile()) <= 15;
     }
 
-    private final static Tile CATHERBY_TELEPORT_AREA = new Tile(2757, 3478, 0);
-
     private boolean atCamelotTeleportArea() {
         return CATHERBY_TELEPORT_AREA.distanceTo(Players.local().tile()) <= 15;
     }
-
-    private final static Tile CATHERBY_FARM_PATCH = new Tile(2807, 3464, 0);
 
     private void getWalkingToCatherbyFarmingPatch() {
         getLog().info("Walk to catherby patch");
@@ -700,9 +705,6 @@ public class Main extends AbstractScript {
         return CATHERBY_FARM_PATCH.distanceTo(Players.local().tile()) <= 15;
     }
 
-
-    private final static Tile FALADOR_FARM_PATCH = new Tile(3056, 3310, 0);
-
     private boolean atFaladorFarmingPatch() {
         return FALADOR_FARM_PATCH.distanceTo(Players.local().tile()) <= 15;
     }
@@ -711,8 +713,6 @@ public class Main extends AbstractScript {
         getLog().info("Walk to falador patch");
         Movement.moveTo(FALADOR_FARM_PATCH);
     }
-
-    private final static Tile FALADOR_TELEPORT_AREA = new Tile(2965, 3381, 0);
 
     private boolean atFaladorTeleport() {
         return FALADOR_TELEPORT_AREA.distanceTo(Players.local().tile()) <= 15;
